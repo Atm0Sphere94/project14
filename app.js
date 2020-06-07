@@ -1,5 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cookies = require('cookie-parser');
+const helmet = require('helmet');
 
 const app = express();
 
@@ -12,10 +14,11 @@ const auth = require('./middlewares/auth');
 
 
 connectDB();
-
+app.use(helmet());
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookies());
 
 app.post('/signup', createUser);
 app.post('/signin', login);
