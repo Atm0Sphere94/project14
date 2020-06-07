@@ -64,6 +64,7 @@ const createUser = (async (req, res, next) => {
 const login = (async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const tokenExpires = '3600000 * 24 * 7'; // in ms 1 hour * 24 in a day * 7days in week
     const user = User.findUserByEmail(email, password);
     const token = await jwt.sign(
       { _id: user._id },
@@ -71,7 +72,7 @@ const login = (async (req, res, next) => {
       { expiresIn: '7d' },
     );
     res.cookie('jwt', token, JWT_SECRET, { // JWT после создания должен быть отправлен клиенту
-      maxAge: '7d',
+      maxAge: tokenExpires,
       httpOnly: true,
       secure: true,
       sameSite: true,

@@ -1,11 +1,15 @@
+const mongoose = require('mongoose');
 const Card = require('../models/card');
 const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/forbiddenError');
 
 // GET /cards — возвращает все карточки
 const getAllCards = (async (req, res, next) => {
   try {
     const cards = await Card.find({});
-    return res.status(200).send({ data: cards });
+    return res.status(200).send({
+      data: cards,
+    });
   } catch (error) {
     return next(error);
   }
@@ -14,9 +18,18 @@ const getAllCards = (async (req, res, next) => {
 // POST /cards — создаёт карточку
 const postCard = (async (req, res, next) => {
   try {
-    const { name, link } = req.body;
-    const card = await Card.create({ name, link, owner: req.user._id });
-    return res.status(201).send({ data: card });
+    const {
+      name,
+      link,
+    } = req.body;
+    const card = await Card.create({
+      name,
+      link,
+      owner: req.user._id,
+    });
+    return res.status(201).send({
+      data: card,
+    });
   } catch (error) {
     return next(error);
   }
@@ -25,15 +38,27 @@ const postCard = (async (req, res, next) => {
 // DELETE /cards/:cardId — удаляет карточку по идентификатору
 const deleteCard = (async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const {
+      id,
+    } = req.params;
     const card = await Card.findById(id);
     if (!card) {
-      throw new NotFoundError('Карточка не найдена');
+      return next(new NotFoundError('Not Found')); // здесь проверка, не удалена ли уже карточка
     }
-    const cardToDelete = await Card.findByIdAndRemove(id);
-    return res.status(200).send({ message: 'card deleted:', data: cardToDelete });
-  } catch (error) {
-    return next(error);
+    if (!card.owner.equals(req.user._id)) {
+      return next(new ForbiddenError('Unauthorized')); // passes the data to errorHandler middleware
+    }
+    const cardToDelete = await Card.findByIdAndRemove(id)
+      .populate('likes').populate('owner');
+    return res.status(200).send({
+      message: 'card deleted:',
+      data: cardToDelete,
+    });
+  } catch (err) {
+    if (err instanceof mongoose.Error.CastError) {
+      return next(new NotFoundError('Not Found'));
+    }
+    return next(err); // passes the data to errorHandler middleware
   }
 });
 
