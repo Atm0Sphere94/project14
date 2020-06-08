@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Card = require('../models/card');
 const NotFoundError = require('../errors/NotFoundError');
 const ForbiddenError = require('../errors/forbiddenError');
+const BadRequestError = require('../errors/badRequestError');
 
 // GET /cards — возвращает все карточки
 const getAllCards = (async (req, res, next) => {
@@ -41,6 +42,9 @@ const deleteCard = (async (req, res, next) => {
     const {
       id,
     } = req.params;
+    if (!id) {
+      return next(new BadRequestError('This id is not valid')); // здесь проверка, не удалена ли уже карточка
+    }
     const card = await Card.findById(id);
     if (!card) {
       return next(new NotFoundError('Not Found')); // здесь проверка, не удалена ли уже карточка

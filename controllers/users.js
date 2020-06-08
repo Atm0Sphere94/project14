@@ -6,6 +6,7 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
 const BadRequestError = require('../errors/badRequestError');
+const ConflictError = require('../errors/conflictError');
 
 const { JWT_SECRET } = require('../config');
 
@@ -56,6 +57,10 @@ const createUser = (async (req, res, next) => {
     if (err instanceof mongoose.Error.ValidationError) {
       return next(new BadRequestError(err.message));
     }
+    // eslint-disable-next-line eqeqeq
+    if (err.code == '11000') {
+      return next(new ConflictError('This email already exsists'));
+    }
     return next(err); // passes the data to error handler
   }
 });
@@ -65,7 +70,7 @@ const login = (async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const tokenExpires = '3600000 * 24 * 7'; // in ms 1 hour * 24 in a day * 7days in week
-    const user = User.findUserByEmail(email, password);
+    const user = await User.findUserByEmail(email, password);
     const token = await jwt.sign(
       { _id: user._id },
       JWT_SECRET,

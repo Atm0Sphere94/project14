@@ -49,6 +49,9 @@ userSchema.statics.findUserByEmail = function findUser(email, password) {
       if (!user) {
         return Promise.reject(new UnauthorizedError('The email or password you entered are not valid'));
       }
+      if (!password) {
+        return Promise.reject(new UnauthorizedError('The email or password you entered are not valid'));
+      }
       return bcrypt.compare(password, user.password)
         .then((matched) => {
           if (!matched) {
