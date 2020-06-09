@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -54,7 +53,7 @@ const createUser = (async (req, res, next) => {
       },
     }); // данные всех полей должны приходить в теле запроса (кроме пароля)
   } catch (err) {
-    if (err instanceof mongoose.Error.ValidationError) {
+    if (err.name === 'ValidationError') {
       return next(new BadRequestError(err.message));
     }
     // eslint-disable-next-line eqeqeq

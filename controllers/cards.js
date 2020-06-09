@@ -32,6 +32,9 @@ const postCard = (async (req, res, next) => {
       data: card,
     });
   } catch (error) {
+    if (error.name === 'ValidationError') {
+      return next(new BadRequestError(error.message));
+    }
     return next(error);
   }
 });
@@ -42,9 +45,6 @@ const deleteCard = (async (req, res, next) => {
     const {
       id,
     } = req.params;
-    if (!id) {
-      return next(new BadRequestError('This id is not valid')); // здесь проверка, не удалена ли уже карточка
-    }
     const card = await Card.findById(id);
     if (!card) {
       return next(new NotFoundError('Not Found')); // здесь проверка, не удалена ли уже карточка
@@ -52,15 +52,14 @@ const deleteCard = (async (req, res, next) => {
     if (!card.owner.equals(req.user._id)) {
       return next(new ForbiddenError('Unauthorized')); // passes the data to errorHandler middleware
     }
-    const cardToDelete = await Card.findByIdAndRemove(id)
-      .populate('likes').populate('owner');
+    const cardToDelete = await Card.findByIdAndRemove(id);
     return res.status(200).send({
       message: 'card deleted:',
       data: cardToDelete,
     });
   } catch (err) {
-    if (err instanceof mongoose.Error.CastError) {
-      return next(new NotFoundError('Not Found'));
+    if (err instanceof mongoose.Types.ObjectId.isValid) {
+      return next(new BadRequestError('This id is not valid'));
     }
     return next(err); // passes the data to errorHandler middleware
   }
