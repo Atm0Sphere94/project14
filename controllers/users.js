@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const mongoose = require('mongoose');
 const User = require('../models/user');
 const NotFoundError = require('../errors/NotFoundError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
@@ -29,6 +29,9 @@ const getUser = (async (req, res, next) => {
     }
     res.status(200).send({ data: user });
   } catch (err) {
+    if (err instanceof mongoose.CastError) {
+      next(new BadRequestError('This id is not valid'));
+    }
     next(err);
   }
 });
