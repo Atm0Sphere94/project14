@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Card = require('../models/card');
 const NotFoundError = require('../errors/NotFoundError');
 const ForbiddenError = require('../errors/forbiddenError');
@@ -58,8 +57,8 @@ const deleteCard = (async (req, res, next) => {
       data: cardToDelete,
     });
   } catch (err) {
-    if (err instanceof mongoose.Types.ObjectId.isValid) {
-      return next(new BadRequestError('This id is not valid'));
+    if (err.name === 'CastError') {
+      return next(new BadRequestError(err.message));
     }
     return next(err); // passes the data to errorHandler middleware
   }
