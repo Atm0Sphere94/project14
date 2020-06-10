@@ -23,15 +23,16 @@ const getAllUsers = (async (req, res, next) => {
 // GET /users/:userId - возвращает пользователя по _id
 const getUser = (async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      throw new NotFoundError('Нет пользователя с таким ID');
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+      const user = await User.findById(req.params.id);
+      if (!user) {
+        throw new NotFoundError('Нет пользователя с таким ID');
+      }
+      res.status(200).send({ data: user });
+    } else {
+      throw (new BadRequestError('This id is not valid'));
     }
-    res.status(200).send({ data: user });
   } catch (err) {
-    if (err instanceof mongoose.CastError) {
-      next(new BadRequestError('This id is not valid'));
-    }
     next(err);
   }
 });
